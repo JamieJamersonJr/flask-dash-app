@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- <link rel="stylesheet" href="{{url_for('static', filename='bootstrap-css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap-js/bootstrap.min.js')}}"> -->
+    <link rel="stylesheet" href="{{url_for('static', filename='base_css.css')}}">
+    
+    <style>
+        #header {
+            position: sticky;
+            z-index: 100;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        a {
+            color: var(--main-dark-color);
+            background: var(--main-light-color);
+            outline: 1px var(--main-highlight) solid;
+            text-decoration: none;
+            margin: 0px;
+            padding: 2pt;
+            margin-left: 2pt;
+            float: center;
+            border-radius: 1px;
+            transition-duration: 100ms;
+            font-family: "Geist";
+            font-size: 12pt;
+        }
+        a:visited {
+            color: var(--main-dark-color);
+        }
+        a:hover {
+            outline: 1px var(--secondary-highlight) solid;
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- <div id="header">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('login') }}">Login</a>
+        {% if message %}
+        <div class="genericMessage float-end"> {{ message }}</div>
+        {% endif %}
+    </div> -->
+<div style="display: flex;flex-direction: row; padding-bottom: 5pt;">
+    <div style="flex-grow: 1; max-height: 20pt;"><img style="position: absolute;" src="{{url_for('static', filename='Medtronic_Logo.svg')}}" alt="" srcset=""></div>
+    <div style="flex-grow: 1; justify-content: center; display: flex;"><a href="{{ url_for('dashboard') }}">Dashboard</a><a href="{{ url_for('login') }}">Login</a></div>
+    <div style="flex-grow: 1; justify-content: flex-end; display: flex;">
+        {% if message %}
+        <div class="genericMessage float-end"> {{ message }}</div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

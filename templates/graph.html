@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>graph</title>
+</head>
+<body>
+    <form action="dashboard" method="post">
+        <div style="display: flex; flex-direction: row;">
+            <div style="flex-grow: 1; justify-content: flex-end; display: flex;">
+                <label style="padding-left: 10pt; padding-right: 2pt;" for="fromDate">From Date: </label> <input type="date" step="0.01" name="fromDate" value = "1980-01-01">
+                <label style="padding-left: 10pt; padding-right: 2pt;" for="toDate">To Date: </label> <input type="date" step="0.01" name="toDate" value = "3000-01-01">
+                <input style="margin-left: 10pt" type="submit" name = "submitButton" value="Refresh Graph">
+            </div>
+        </div>
+    </form>
+
+    <div>
+        <img src="{{url_for('static', filename='temp_storage/5plot.png')}}" style="float: right;width: 60vw;display: flex;">
+    </div>
+    <div>
+        <img src="{{url_for('static', filename='temp_storage/05plot.png')}}" style="float: right;width: 60vw;display: flex;">
+    </div>
+    
+</body>
+</html>
