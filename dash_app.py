@@ -42,6 +42,7 @@ def datestring_to_unix(date_string, format = "%d/%m/%Y"):
 def getSamples(year = None):
     query_data = query_db('select date, p5_count, p05_count, location from Samples ORDER BY date ASC')
     dataDict = {'data':[],'p5':[],'p05':[], 'posizione':[]}
+    i = 0
     for row in query_data:
         if year != None:
             from_date = int(datetime(year-1, 5, 1).timestamp())
@@ -54,6 +55,8 @@ def getSamples(year = None):
         dataDict['p5'].append(row['p5_count'])
         dataDict['p05'].append(row['p05_count'])
         dataDict['posizione'].append(row['location'])
+        i += 1
+    print(f"ITERATOR: {i}")
     return pd.DataFrame(data = dataDict)
 
 PRECALCULATED_STATISTICS = {'mean_p5':None, 'mean_p05':None, 'stdDev_p5':None,
@@ -122,6 +125,7 @@ def define_callbacks():
         Input('year-dropdown', 'value')
     )
     def update_graph(selected_year = None):
+        
         # if start_date != None:
         #     converted_start_date = datetime.strptime(start_date, "%Y-%m-%d")
         #     converted_end_date = datetime.strptime(end_date, "%Y-%m-%d").replace(year = get_fiscal_year(converted_start_date))
@@ -141,6 +145,19 @@ def define_callbacks():
             df = getSamples(selected_year)
         else:
             df = getSamples()
+
+        PRECALCULATED_STATISTICS["mean_p5"] = df['p5'].mean()
+        PRECALCULATED_STATISTICS["mean_p05"] = df['p05'].mean()
+        PRECALCULATED_STATISTICS["stdDev_p5"] = df['p5'].std()
+        PRECALCULATED_STATISTICS["stdDev_p05"] = df['p05'].std()
+        PRECALCULATED_STATISTICS["ucl_p5"] = round(PRECALCULATED_STATISTICS["mean_p5"] + (3 * PRECALCULATED_STATISTICS["stdDev_p5"]), 2)
+        PRECALCULATED_STATISTICS["ucl_p05"] = round(PRECALCULATED_STATISTICS["mean_p05"] + (3 * PRECALCULATED_STATISTICS["stdDev_p05"]), 2)
+        PRECALCULATED_STATISTICS["limit_p5"] = 29300
+        PRECALCULATED_STATISTICS["limit_p05"] = 3520000
+
+        PRECALCULATED_STATISTICS["fiscal_years"] = df['data'].apply(lambda x: get_fiscal_year_from_string(x, "%d/%m/%Y"))
+        PRECALCULATED_STATISTICS["fiscal_years"] = list(set(PRECALCULATED_STATISTICS["fiscal_years"]))
+        PRECALCULATED_STATISTICS["fiscal_years"].sort(reverse=True)
         df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
         # Creazione del grafico a linee interattivo con Plotly Express
         fig = px.line(
