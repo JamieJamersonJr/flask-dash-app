@@ -10,23 +10,6 @@ import fiscalyear
 CONFIG = {'Database':None}
 
 
-def make_layout():
-    return html.Div([
-    dcc.DatePickerRange(
-        id='date-picker-range',
-        min_date_allowed=date(1971, 1, 1),
-        max_date_allowed=date(2100, 1, 1),
-        initial_visible_month=date(datetime.now().year, 1, 1),
-        end_date=date(2024, 1, 1),
-        month_format="YYYY/MM/DD",
-        display_format="YYYY/MM/DD"
-    ),
-    dcc.Graph(figure={}, id='p5-graph'),
-    html.Br(),
-    dcc.Graph(figure={}, id='p05-graph')
-])
-
-
 def make_dicts(cursor, row):
     return dict((cursor.description[idx][0], value)
                 for idx, value in enumerate(row))
@@ -43,8 +26,8 @@ def query_db(query):
     db.close()
     return result
 
-def unix_to_datestring(unix):
-    return datetime.fromtimestamp(int(unix)).strftime('%d/%m/%Y')
+def unix_to_datestring(unix, format = "%d/%m/%Y"):
+    return datetime.fromtimestamp(int(unix)).strftime(format)
 
 def datestring_to_unix(date_string, format = "%d/%m/%Y"):
     if date_string == None:
@@ -56,11 +39,14 @@ def datestring_to_unix(date_string, format = "%d/%m/%Y"):
     unix_timestamp = int(dt_object.timestamp())
     return unix_timestamp
 
-def getSamples(from_date = None, to_date = None):
+def getSamples(year = None):
     query_data = query_db('select date, p5_count, p05_count, location from Samples ORDER BY date ASC')
     dataDict = {'data':[],'p5':[],'p05':[], 'posizione':[]}
     for row in query_data:
-        if from_date != None and to_date != None:
+        if year != None:
+            from_date = int(datetime(year-1, 5, 1).timestamp())
+            to_date = int(datetime(year, 4, 30).timestamp())
+
             if row['date'] < from_date or row['date'] > to_date:
                 # print('skipped')
                 continue
@@ -72,7 +58,20 @@ def getSamples(from_date = None, to_date = None):
 
 PRECALCULATED_STATISTICS = {'mean_p5':None, 'mean_p05':None, 'stdDev_p5':None,
                             'stdDev_p05':None, 'ucl_p5':None, 'ucl_p05':None,
-                            'limit_p5':None, 'limit_p05':None}
+                            'limit_p5':None, 'limit_p05':None, 'fiscal_years': None}
+def get_fiscal_year(date):
+    if date.month >= 5:
+        return date.year + 1
+    else:
+        return date.year
+def get_fiscal_year_from_string(str, format = "%Y-%m-%d"):
+    _date = datetime.strptime(str, format)
+    if _date.month >= 5:
+        return _date.year + 1
+    else:
+        return _date.year
+
+
 
 def make_dash(server, database_path):
     CONFIG["Database"] = database_path
@@ -87,41 +86,61 @@ def make_dash(server, database_path):
     PRECALCULATED_STATISTICS["ucl_p05"] = round(PRECALCULATED_STATISTICS["mean_p05"] + (3 * PRECALCULATED_STATISTICS["stdDev_p05"]), 2)
     PRECALCULATED_STATISTICS["limit_p5"] = 29300
     PRECALCULATED_STATISTICS["limit_p05"] = 3520000
-    
+
+    PRECALCULATED_STATISTICS["fiscal_years"] = df['data'].apply(lambda x: get_fiscal_year_from_string(x, "%d/%m/%Y"))
+    PRECALCULATED_STATISTICS["fiscal_years"] = list(set(PRECALCULATED_STATISTICS["fiscal_years"]))
+    PRECALCULATED_STATISTICS["fiscal_years"].sort(reverse=True)
+    print(PRECALCULATED_STATISTICS["fiscal_years"])
     return Dash(
         server=server,
         url_base_pathname='/dash/'
     )
 
-def get_fiscal_year(date):
-    if date.month >= 5:
-        return date.year + 1
-    else:
-        return date.year
+
+
+def make_layout():
+    return html.Div([
+    dcc.Dropdown(PRECALCULATED_STATISTICS["fiscal_years"], PRECALCULATED_STATISTICS["fiscal_years"][0], id='year-dropdown'),
+    # dcc.DatePickerRange(
+    #     id='date-picker-range',
+    #     min_date_allowed=date(1971, 1, 1),
+    #     max_date_allowed=date(2100, 1, 1),
+    #     initial_visible_month=date(datetime.now().year, 1, 1),
+    #     end_date=date(2024, 1, 1),
+    #     month_format="YYYY/MM/DD",
+    #     display_format="YYYY/MM/DD"
+    # ),
+    dcc.Graph(figure={}, id='p5-graph'),
+    html.Br(),
+    dcc.Graph(figure={}, id='p05-graph')
+])
 
 def define_callbacks():
     @callback(
-        [Output(component_id='p5-graph', component_property='figure'),
-         Output('date-picker-range', 'end_date')],
+        Output(component_id='p5-graph', component_property='figure'),
 
-        [Input('date-picker-range', 'start_date'),
-        Input('date-picker-range', 'end_date')]
+        Input('year-dropdown', 'value')
     )
-    def update_graph(start_date = None, end_date = None):
-        if start_date != None:
-            converted_start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            converted_end_date = datetime.strptime(end_date, "%Y-%m-%d").replace(year = get_fiscal_year(converted_start_date))
+    def update_graph(selected_year = None):
+        # if start_date != None:
+        #     converted_start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        #     converted_end_date = datetime.strptime(end_date, "%Y-%m-%d").replace(year = get_fiscal_year(converted_start_date))
 
-            converted_start_date = converted_start_date.strftime("%Y-%m-%d")
-            converted_end_date = converted_end_date.strftime("%Y-%m-%d")
+        #     converted_start_date = converted_start_date.strftime("%Y-%m-%d")
+        #     converted_end_date = converted_end_date.strftime("%Y-%m-%d")
 
-            print(f"START DATE: {converted_start_date} END DATE: {converted_end_date}")
+        #     print(f"START DATE: {converted_start_date} END DATE: {converted_end_date}")
 
-            df = getSamples(datestring_to_unix(start_date, "%Y-%m-%d"), datestring_to_unix(converted_end_date, "%Y-%m-%d"))
+        #     df = getSamples(datestring_to_unix(start_date, "%Y-%m-%d"), datestring_to_unix(converted_end_date, "%Y-%m-%d"))
 
 
+        # else:
+        #     df = getSamples(datestring_to_unix(start_date, "%Y-%m-%d"), datestring_to_unix(end_date, "%Y-%m-%d"))
+        print(selected_year)
+        if selected_year != None:
+            df = getSamples(selected_year)
         else:
-            df = getSamples(datestring_to_unix(start_date, "%Y-%m-%d"), datestring_to_unix(end_date, "%Y-%m-%d"))
+            df = getSamples()
         df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
         # Creazione del grafico a linee interattivo con Plotly Express
         fig = px.line(
