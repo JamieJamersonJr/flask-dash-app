@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import sqlite3 as sql3
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import fiscalyear
 
 CONFIG = {'Database':None}
@@ -93,23 +93,33 @@ def make_dash(server, database_path):
         url_base_pathname='/dash/'
     )
 
+def get_fiscal_year(date):
+    if date.month >= 5:
+        return date.year + 1
+    else:
+        return date.year
 
 def define_callbacks():
     @callback(
-        Output(component_id='p5-graph', component_property='figure'),
+        [Output(component_id='p5-graph', component_property='figure'),
+         Output('date-picker-range', 'end_date')],
+
         [Input('date-picker-range', 'start_date'),
         Input('date-picker-range', 'end_date')]
     )
     def update_graph(start_date = None, end_date = None):
         if start_date != None:
-            fiscalyear.setup_fiscal_calendar(start_month=5) 
-            New_CF_Date = datetime.strptime(start_date, "%Y-%m-%d")
-            fiscal_date = fiscalyear.FiscalDate(New_CF_Date.year, New_CF_Date.month, New_CF_Date.day)
-            print(fiscal_date)
-            print(fiscal_date.fiscal_year)
-            fiscal_end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(year=fiscal_date.fiscal_year).strftime('%Y-%m-%d')
-            print(f"BALLS: {fiscal_end_date}")
-            df = getSamples(datestring_to_unix(start_date, "%Y-%m-%d"), datestring_to_unix(fiscal_end_date, "%Y-%m-%d"))
+            converted_start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            converted_end_date = datetime.strptime(end_date, "%Y-%m-%d").replace(year = get_fiscal_year(converted_start_date))
+
+            converted_start_date = converted_start_date.strftime("%Y-%m-%d")
+            converted_end_date = converted_end_date.strftime("%Y-%m-%d")
+
+            print(f"START DATE: {converted_start_date} END DATE: {converted_end_date}")
+
+            df = getSamples(datestring_to_unix(start_date, "%Y-%m-%d"), datestring_to_unix(converted_end_date, "%Y-%m-%d"))
+
+
         else:
             df = getSamples(datestring_to_unix(start_date, "%Y-%m-%d"), datestring_to_unix(end_date, "%Y-%m-%d"))
         df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
