@@ -51,6 +51,7 @@
     <div style="flex-grow: 1; justify-content: flex-end; display: flex;">
         {% if message %}
         <div class="genericMessage float-end"> {{ message }}</div>
+        <a href="{{ url_for('logout') }}" style="margin-left: 5pt;color: var(--error-color);outline-color: var(--error-color);font-weight: bold;">Log Out</a>
         {% endif %}
     </div>
 </div>

@@ -248,16 +248,15 @@ def home():
 @app.route("/dashboard", methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    
     if request.method == "POST":
         if request.form['submitButton'] == 'Refresh Graph':
-            createPlot(request.form['fromDate'], request.form['toDate'])
+            createPlot()
             return render_template('dashboard.html', message = session.get('message'))
         cur = get_db().cursor()
         tstamp = datestring_to_unix(request.form["date"], "%Y-%m-%d")
         cur.execute(f'INSERT INTO {app.config["sample_table"]} (date, p5_count, p05_count, location, user_hash) VALUES ({tstamp}, {request.form["newMean5"]}, {request.form["newMean05"]}, "PLACEHOLDER", "{session["auth_token"]}")')
         get_db().commit()
-        createPlot(request.form['fromDate'], request.form['toDate'])
+        createPlot()
         return render_template('dashboard.html', message = session.get('message'))
     else:
 
@@ -288,6 +287,11 @@ def login():
             return render_template('login_template.html', error = check['message'])
         
     return render_template('login_template.html')
+
+@app.route("/logout")
+def logout():
+    session.pop('auth_token')
+    return redirect('/login')
 
 @app.route("/admin", methods=['GET', 'POST'], strict_slashes=False)
 def admin():
