@@ -5,7 +5,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import sqlite3 as sql3
 from datetime import date, datetime, timedelta
-import fiscalyear
 
 CONFIG = {'Database':None}
 
