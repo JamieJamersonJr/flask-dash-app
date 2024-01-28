@@ -41,7 +41,7 @@ def datestring_to_unix(date_string, format = "%d/%m/%Y"):
 def getSamples(year = None):
     query_data = query_db('select date, p5_count, p05_count, location from Samples ORDER BY date ASC')
     dataDict = {'data':[],'p5':[],'p05':[], 'posizione':[]}
-    i = 0
+    # i = 0
     for row in query_data:
         if year != None:
             from_date = int(datetime(year-1, 5, 1).timestamp())
@@ -54,8 +54,8 @@ def getSamples(year = None):
         dataDict['p5'].append(row['p5_count'])
         dataDict['p05'].append(row['p05_count'])
         dataDict['posizione'].append(row['location'])
-        i += 1
-    print(f"ITERATOR: {i}")
+        # i += 1
+    # print(f"ITERATOR: {i}")
     return pd.DataFrame(data = dataDict)
 
 PRECALCULATED_STATISTICS = {'mean_p5':None, 'mean_p05':None, 'stdDev_p5':None,
