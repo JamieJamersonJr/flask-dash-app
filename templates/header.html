@@ -113,10 +113,10 @@ body {
         <div class="user-info">
             {% if message %}
                 <span class="user-name">{{ message }}</span>
-                <a href="{{ url_for('logout') }}" style="color: var(--error-color); border-color: var(--error-color);" class="generic-button logout-button">Logout</a>
+                <a href="{{ url_for('logout') }}" style="color: var(--error-color); border-color: var(--error-color); outline: none;" class="generic-button logout-button">Logout</a>
             {% else %}
                 <span class="user-name" style="color: transparent; user-select: none;">The user will be shown here</span>
-                <a href="#" style="color: gray; border-color: gray; pointer-events: none;" class="generic-button logout-button">Logout</a>
+                <a href="#" style="color: gray; border-color: gray; pointer-events: none; outline: none;" class="generic-button logout-button">Logout</a>
             {% endif %}
 
         </div>
