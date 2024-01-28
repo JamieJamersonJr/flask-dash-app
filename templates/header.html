@@ -34,6 +34,53 @@
         a:hover {
             outline: 1px var(--secondary-highlight) solid;
         }
+
+
+body {
+  margin: 0;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3pt;
+  background: var(--main-light-color);
+}
+
+.logo {
+  color: white;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  justify-content: center;
+  flex-grow: 1; /* Takes up remaining space */
+}
+
+.generic-button {
+    text-decoration: none;
+    color: white;
+    border: 1px solid white;
+}
+
+.nav-button {
+  margin: 0 5pt;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-name {
+  margin-right: 10px;
+}
+
+.logout-button {
+  color: var(--error-color);
+}
         
     </style>
 </head>
@@ -45,7 +92,8 @@
         <div class="genericMessage float-end"> {{ message }}</div>
         {% endif %}
     </div> -->
-    <div style="display: flex;flex-direction: row; padding-bottom: 5pt; background: var(--main-highlight);">
+
+    <!-- <div style="display: flex;flex-direction: row; padding-bottom: 5pt; background: var(--main-highlight);">
         <div style="flex-grow: 1; max-height: 20pt;"><img style="position: relative; height: 100%;" src="{{url_for('static', filename='Medtronic_Logo.svg')}}" alt="" srcset=""></div>
         <div style="flex-grow: 1; display: flex;"><a href="{{ url_for('dashboard') }}">Dashboard</a><a href="{{ url_for('login') }}">Login</a></div>
         <div style="flex-grow: 1; justify-content: flex-end; display: flex;">
@@ -54,6 +102,24 @@
             <a href="{{ url_for('logout') }}" style="margin-left: 5pt;color: var(--error-color);outline-color: var(--error-color);font-weight: bold;">Log Out</a>
             {% endif %}
         </div>
-    </div>
+    </div> -->
+
+    <header class="navbar">
+        <img style="position: relative; height: 100%;" src="{{url_for('static', filename='Medtronic_Logo.svg')}}" alt="" srcset="">
+        <nav class="nav-links">
+          <a href="{{ url_for('dashboard') }}" class="generic-button nav-button">Dashboard</a>
+          <a href="{{ url_for('login') }}" class="generic-button nav-button">Login</a>
+        </nav>
+        <div class="user-info">
+            {% if message %}
+                <span class="user-name">{{ message }}</span>
+                <a href="{{ url_for('logout') }}" style="color: var(--error-color); border-color: var(--error-color);" class="generic-button logout-button">Logout</a>
+            {% else %}
+                <span class="user-name" style="color: transparent; user-select: none;">The user will be shown here</span>
+                <a href="#" style="color: gray; border-color: gray; pointer-events: none;" class="generic-button logout-button">Logout</a>
+            {% endif %}
+
+        </div>
+      </header>
 </body>
 </html>
