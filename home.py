@@ -254,7 +254,7 @@ def dashboard():
             return render_template('dashboard.html', message = session.get('message'))
         cur = get_db().cursor()
         tstamp = datestring_to_unix(request.form["date"], "%Y-%m-%d")
-        cur.execute(f'INSERT INTO {app.config["sample_table"]} (date, p5_count, p05_count, location, user_hash) VALUES ({tstamp}, {request.form["newMean5"]}, {request.form["newMean05"]}, "PLACEHOLDER", "{session["auth_token"]}")')
+        cur.execute(f'INSERT INTO {app.config["sample_table"]} (date, p5_count, p05_count, location, user_hash) VALUES ({tstamp}, {request.form["newMean5"]}, {request.form["newMean05"]}, "{request.form["location"]}", "{session["auth_token"]}")')
         get_db().commit()
         createPlot()
         return render_template('dashboard.html', message = session.get('message'))
@@ -293,13 +293,21 @@ def logout():
     session.pop('auth_token')
     return redirect('/login')
 
+app.config['IS_USER_ADMIN'] = False
 @app.route("/admin", methods=['GET', 'POST'], strict_slashes=False)
 def admin():
-    
-    return 'TODO'
+    app.config['IS_USER_ADMIN'] = False
+    if request.method == "POST":
+        password = request.form['password']
+        if password == "Password123":
+            app.config['IS_USER_ADMIN'] = True
+            return redirect('register')
+    return render_template('admin_login.html')
 
 @app.route("/admin/register", methods=['GET', 'POST'])
 def add_user():
+    if not app.config['IS_USER_ADMIN']:
+        return '404'
     cur = get_db().cursor()
     users = []
     cur.execute('SELECT * FROM Users')
@@ -315,7 +323,7 @@ def add_user():
         
         cur.execute(f"INSERT INTO Users (username, password_hash) VALUES (\"{username}\", \"{hashed_password}\")")
         get_db().commit()
-
+    app.config['IS_USER_ADMIN'] = False
     return render_template('register_user.html', activeUsers = users)
 
 

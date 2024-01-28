@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>ADMIN LOGIN</title>
     <!-- <link rel="stylesheet" href="{{url_for('static', filename='base_css.css')}}"> -->
 </head>
 <body>
@@ -14,12 +14,12 @@
     <div id="formContainer" class="align-items">
         <form method="post">
             <div class="justify-items">
-                <div><label for="username">Username: </label><input type="text" name="username" placeholder="JohnDoe"
-                        minlength="3" pattern="^[a-zA-Z0-9]+$"
-                        title="Must be at least 3 characters and NOT include punctuation or spaces" required
-                        autocomplete="off">
-                    <div class="formError genericError">This entry has an error</div>
+                <div style="text-align: center;align-self: center;color: var(--error-color);font-weight: bold;">ADMIN LOGIN! Not an
+                    admin? Go to the <a href="/login"
+                        style="outline: none;color: var(--main-highlight);font-size: inherit;text-decoration: underline;">user
+                        login</a>.<div></div>
                 </div>
+                
                 <div><label for="password">Password: </label><input type="password" name="password"
                         placeholder="hunter2" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                         title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"

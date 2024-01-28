@@ -120,7 +120,6 @@ def make_layout():
 def define_callbacks():
     @callback(
         Output(component_id='p5-graph', component_property='figure'),
-
         Input('year-dropdown', 'value')
     )
     def update_graph(selected_year = None):
@@ -163,10 +162,9 @@ def define_callbacks():
             df,
             x="data",
             y="p5",
-            labels={"p5": "N° particelle di diametro ≥ 5 μm"},
+            labels={"p5": f"N° particelle di diametro ≥ 5 μm"},
             title="Carta di Controllo per particelle di diametro ≥ 5 μm",
         )
-
         # Aggiungi le linee orizzontali per i limiti
         fig.add_shape(
             dict(
@@ -266,6 +264,135 @@ def define_callbacks():
         # fig.show()
         return fig
 
+    @callback(
+        Output(component_id='p05-graph', component_property='figure'),
+        Input('year-dropdown', 'value')
+    )
+    def update_p05_graph(selected_year = None):
+        if selected_year != None:
+            df = getSamples(selected_year)
+        else:
+            df = getSamples()
+
+        PRECALCULATED_STATISTICS["mean_p5"] = df['p5'].mean()
+        PRECALCULATED_STATISTICS["mean_p05"] = df['p05'].mean()
+        PRECALCULATED_STATISTICS["stdDev_p5"] = df['p5'].std()
+        PRECALCULATED_STATISTICS["stdDev_p05"] = df['p05'].std()
+        PRECALCULATED_STATISTICS["ucl_p5"] = round(PRECALCULATED_STATISTICS["mean_p5"] + (3 * PRECALCULATED_STATISTICS["stdDev_p5"]), 2)
+        PRECALCULATED_STATISTICS["ucl_p05"] = round(PRECALCULATED_STATISTICS["mean_p05"] + (3 * PRECALCULATED_STATISTICS["stdDev_p05"]), 2)
+        PRECALCULATED_STATISTICS["limit_p5"] = 29300
+        PRECALCULATED_STATISTICS["limit_p05"] = 3520000
+
+        PRECALCULATED_STATISTICS["fiscal_years"] = df['data'].apply(lambda x: get_fiscal_year_from_string(x, "%d/%m/%Y"))
+        PRECALCULATED_STATISTICS["fiscal_years"] = list(set(PRECALCULATED_STATISTICS["fiscal_years"]))
+        PRECALCULATED_STATISTICS["fiscal_years"].sort(reverse=True)
+        df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
+        # Creazione del grafico a linee interattivo con Plotly Express
+        fig = px.line(
+            df,
+            x="data",
+            y="p05",
+            labels={"p05": "N° particelle di diametro ≥ 0,5 μm"},
+            title="Carta di Controllo per particelle di diametro ≥ 0,5 μm",
+        )
+
+        # Aggiungi le linee orizzontali per i limiti
+        fig.add_shape(
+            dict(
+                type="line",
+                x0=df["data"].min(),
+                x1=df["data"].max(),
+                y0=PRECALCULATED_STATISTICS['limit_p05'],
+                y1=PRECALCULATED_STATISTICS['limit_p05'],
+                line=dict(color="green", dash="dash"),
+                name="Action level",
+            )
+        )
+        fig.add_shape(
+            dict(
+                type="line",
+                x0=df["data"].min(),
+                x1=df["data"].max(),
+                y0=PRECALCULATED_STATISTICS['ucl_p05'],
+                y1=PRECALCULATED_STATISTICS['ucl_p05'],
+                line=dict(color="red", dash="dash"),
+                name="Alert level",
+            )
+        )
+
+        # Aggiungi le annotazioni per la legenda
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker=dict(color="rgba(0,0,0,0)"),
+                showlegend=True,
+                name=f"Mean: {PRECALCULATED_STATISTICS['mean_p05']:.2f}",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker=dict(color="rgba(0,0,0,0)"),
+                showlegend=True,
+                name=f"Std Dev: {PRECALCULATED_STATISTICS['stdDev_p05'] :.2f}",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker=dict(color="rgba(0,0,0,0)"),
+                showlegend=True,
+                name=f"Limit: {PRECALCULATED_STATISTICS['limit_p05']}",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                marker=dict(color="rgba(0,0,0,0)"),
+                showlegend=True,
+                name=f"Alert: {PRECALCULATED_STATISTICS['ucl_p05']}",
+            )
+        )
+        # Trova gli outlier e aggiungi i punti all'istogramma
+        outlier = df["p05"] > PRECALCULATED_STATISTICS['ucl_p05']
+        fig.add_trace(
+            go.Scatter(
+                x=df.loc[outlier, "data"],
+                y=df.loc[outlier, "p05"],
+                mode="markers",
+                marker=dict(color="red"),
+                name="Outlier",
+            )
+        )
+
+        # Aggiungi le etichette per gli outlier
+        for i, txt in enumerate(df.loc[outlier, "p05"]):
+            posizione = df.loc[outlier, "posizione"].iloc[i]
+            fig.add_annotation(
+                x=df.loc[outlier, "data"].iloc[i],
+                y=txt,
+                text=f"Pos {posizione}\n{txt:.2f}",
+                showarrow=True,
+                arrowhead=2,
+                arrowcolor="red",
+            )
+
+        # Aggiungi le etichette degli assi e mostra il grafico
+        fig.update_layout(
+            xaxis_title="Data",
+            yaxis_title="N° particelle di diametro ≥ 0,5 μm",
+            xaxis=dict(tickangle=45),
+            showlegend=True,
+        )
+        return fig
 
 
 
@@ -389,123 +516,6 @@ def define_callbacks():
 #     )
 #     # fig.show()
 #     return fig
-
-
-# @callback(
-#     Output(component_id='p05-graph', component_property='figure'),
-#     [Input('date-picker-range', 'start_date'),
-#     Input('date-picker-range', 'end_date')]
-# )
-# def update_graph(start_date = None, end_date = None):
-#     # Conversione della colonna 'data' in formato datetime
-#     df["data"] = pd.to_datetime(df["data"])
-#     # Creazione del grafico a linee interattivo con Plotly Express
-#     fig = px.line(
-#         df,
-#         x="data",
-#         y="p05",
-#         labels={"p05": "N° particelle di diametro ≥ 0,5 μm"},
-#         title="Carta di Controllo per particelle di diametro ≥ 0,5 μm",
-#     )
-
-#     # Aggiungi le linee orizzontali per i limiti
-#     fig.add_shape(
-#         dict(
-#             type="line",
-#             x0=df["data"].min(),
-#             x1=df["data"].max(),
-#             y0=limit_p05,
-#             y1=limit_p05,
-#             line=dict(color="green", dash="dash"),
-#             name="Action level",
-#         )
-#     )
-#     fig.add_shape(
-#         dict(
-#             type="line",
-#             x0=df["data"].min(),
-#             x1=df["data"].max(),
-#             y0=ucl_p05,
-#             y1=ucl_p05,
-#             line=dict(color="red", dash="dash"),
-#             name="Alert level",
-#         )
-#     )
-
-#     # Aggiungi le annotazioni per la legenda
-#     fig.add_trace(
-#         go.Scatter(
-#             x=[None],
-#             y=[None],
-#             mode="markers",
-#             marker=dict(color="rgba(0,0,0,0)"),
-#             showlegend=True,
-#             name=f"Mean: {mean_p05:.2f}",
-#         )
-#     )
-#     fig.add_trace(
-#         go.Scatter(
-#             x=[None],
-#             y=[None],
-#             mode="markers",
-#             marker=dict(color="rgba(0,0,0,0)"),
-#             showlegend=True,
-#             name=f"Std Dev: {stdDev_p05:.2f}",
-#         )
-#     )
-#     fig.add_trace(
-#         go.Scatter(
-#             x=[None],
-#             y=[None],
-#             mode="markers",
-#             marker=dict(color="rgba(0,0,0,0)"),
-#             showlegend=True,
-#             name=f"Limit: {limit_p05}",
-#         )
-#     )
-#     fig.add_trace(
-#         go.Scatter(
-#             x=[None],
-#             y=[None],
-#             mode="markers",
-#             marker=dict(color="rgba(0,0,0,0)"),
-#             showlegend=True,
-#             name=f"Alert: {ucl_p05}",
-#         )
-#     )
-#     # Trova gli outlier e aggiungi i punti all'istogramma
-#     outlier = df["p05"] > ucl_p05
-#     fig.add_trace(
-#         go.Scatter(
-#             x=df.loc[outlier, "data"],
-#             y=df.loc[outlier, "p05"],
-#             mode="markers",
-#             marker=dict(color="red"),
-#             name="Outlier",
-#         )
-#     )
-
-#     # Aggiungi le etichette per gli outlier
-#     for i, txt in enumerate(df.loc[outlier, "p05"]):
-#         posizione = df.loc[outlier, "posizione"].iloc[i]
-#         fig.add_annotation(
-#             x=df.loc[outlier, "data"].iloc[i],
-#             y=txt,
-#             text=f"Pos {posizione}\n{txt:.2f}",
-#             showarrow=True,
-#             arrowhead=2,
-#             arrowcolor="red",
-#         )
-
-#     # Aggiungi le etichette degli assi e mostra il grafico
-#     fig.update_layout(
-#         xaxis_title="Data",
-#         yaxis_title="N° particelle di diametro ≥ 0,5 μm",
-#         xaxis=dict(tickangle=45),
-#         showlegend=True,
-#     )
-#     return fig
-
 
 
 
