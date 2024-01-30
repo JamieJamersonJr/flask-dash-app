@@ -45,7 +45,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 3pt;
-  background: var(--main-light-color);
+  background: var(--main-highlight);
 }
 
 .logo {
@@ -105,7 +105,7 @@ body {
     </div> -->
 
     <header class="navbar">
-        <img style="position: relative; height: 100%;" src="{{url_for('static', filename='Medtronic_Logo.svg')}}" alt="" srcset="">
+        <img style="position: relative; height: 100%;" src="{{url_for('static', filename='logo.png')}}" alt="" srcset="">
         <nav class="nav-links">
           <a href="{{ url_for('dashboard') }}" class="generic-button nav-button">Dashboard</a>
           <a href="{{ url_for('login') }}" class="generic-button nav-button">Login</a>
