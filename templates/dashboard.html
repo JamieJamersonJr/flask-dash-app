@@ -66,7 +66,25 @@
             <div class="center">
                 <input type="submit" name = "submitButton" value="Submit New Mean" style="width: 100%;">
             </div>
-            <textarea name="test" id="test" cols="30" rows="10"></textarea>
+            <textarea name="notes" id="notes" cols="30" rows="10"></textarea>
+            <script type="application/javascript">
+                let notes = document.getElementById('notes');
+                    fetch('/log_note').then(res => res.text()).then(text => notes.value = text);
+                    notes.onkeyup = e => {
+                        fetch('/log_note', {
+                            cache: "no-cache",
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: new URLSearchParams({
+                                'text': notes.value,
+                            }),
+                        })
+                        .then(res => res.text())
+                        .then(text => console.log(text))
+                }
+            </script>
         </form>
     </div>
 

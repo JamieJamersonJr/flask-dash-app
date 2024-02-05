@@ -267,6 +267,39 @@ def graph():
     createPlot()
     return render_template('graph.html')
 
+@app.route("/log_note", methods=['GET', 'POST'])
+@login_required
+def log_note():
+    cur = get_db().cursor()
+    hash = session['auth_token']
+    if request.method == "POST":
+        text = request.form['text']
+        cur.execute(f'SELECT username from Logins where login_hash = "{hash}"')
+        for row in cur:
+            username = row['username']
+            cur.execute(f'update UserNotes SET content = "{text}" WHERE user = "{username}"')
+            get_db().commit()
+        return f'update UserNotes SET content = "{text}" WHERE user = "{username}"'
+    
+    cur.execute(f'SELECT username from Logins where login_hash = "{hash}"')
+    username = None
+    for row in cur:
+        username = row['username']
+    cur.execute(f'select content from UserNotes where user = "{username}"')
+    for row in cur:
+        return row['content']
+
+# @app.route('/aaa')
+# def aaaaaaa():
+#     cur = get_db().cursor()
+#     cur.execute('select username from Users')
+#     for row in cur:
+#         username = row['username']
+#         print(f'insert into UserNotes (content, user) VALUES ("", "{username}")')
+#         # cur.execute(f'insert into UserNotes (content, user) VALUES ("", "{username}")')
+#         # get_db().commit()
+#     return ''
+
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
